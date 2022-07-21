@@ -2,7 +2,7 @@
 import numpy as np
 import cv2
 import time
-
+import tensorflow as tf
 from os.path import splitext
 
 from .. src.label import Label
@@ -28,12 +28,14 @@ def save_model(model,path,verbose=0):
 
 def load_model(path,custom_objects={},verbose=0):
 	from tensorflow.keras.models import model_from_json
+	tf.compat.v1.disable_eager_execution()
 
 	path = splitext(path)[0]
 	with open('%s.json' % path,'r') as json_file:
 		model_json = json_file.read()
 	model = model_from_json(model_json, custom_objects=custom_objects)
 	model.load_weights('%s.h5' % path)
+	model.compile(loss='sparse_categorical_crossentropy',optimizer='adam',metrics=['accuracy'])
 	if verbose: print('Loaded from %s' % path)
 	return model
 
@@ -94,9 +96,7 @@ def reconstruct(Iorig,I,Y,out_size,threshold=.9):
 
 	return final_labels,TLps
 	
-
 def detect_lp(model,I,max_dim,net_step,out_size,threshold):
-
 	min_dim_img = min(I.shape[:2])
 	factor 		= float(max_dim)/min_dim_img
 
